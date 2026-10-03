@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Force — Invitation</title>
+<meta name="description" content="Somewhere, someone thinks like you. Accept your invitation to Force.">
+<style>
+  :root {
+    --ground: #0d0c0b;
+    --ground-2: #141210;
+    --paper: #ece6db;
+    --paper-dim: rgba(236, 230, 219, 0.62);
+    --paper-faint: rgba(236, 230, 219, 0.38);
+    --hair: rgba(236, 230, 219, 0.12);
+    --clay: #c98a72;
+    --error: #f0a48c;
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--ground);
+    color: var(--paper);
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.5;
+    letter-spacing: -0.003em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection { background: var(--paper); color: var(--ground); }
+
+  .shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    min-height: 100dvh;
+  }
+
+  /* ───────── Plate (left) ───────── */
+  .plate {
+    position: relative;
+    background: var(--ground-2);
+    border-right: 1px solid var(--hair);
+    overflow: hidden;
+  }
+  .plate canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .plate-top, .plate-bottom {
+    position: absolute; left: 28px; right: 28px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: var(--paper-faint);
+    pointer-events: none;
+  }
+  .plate-top { top: 24px; }
+  .plate-bottom { bottom: 22px; }
+  .wordmark { display: flex; align-items: center; gap: 8px; color: var(--paper); font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+  .logo { width: 22px; height: auto; color: var(--clay); display: block; }
+  .tab { font-variant-numeric: tabular-nums; }
+  .readout { transition: opacity 300ms var(--ease); }
+
+  /* ───────── Form (right) ───────── */
+  .panel {
+    display: flex; flex-direction: column;
+    padding: 24px 28px;
+    min-height: 100dvh;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 40px;
+  }
+  .back {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: 0; color: var(--paper-dim);
+    font: inherit; font-size: 12px; cursor: pointer;
+    transition-property: color, opacity; transition-duration: 150ms;
+  }
+  .back::before { content: ""; position: absolute; inset: -12px -10px; }
+  .back:hover { color: var(--paper); }
+  .back[hidden] { display: inline-flex; visibility: hidden; }
+  .back svg { width: 12px; height: 12px; }
+
+  .progress { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--paper-faint); }
+  .pull { position: relative; width: 64px; height: 6px; }
+  .pull::before { content: ""; position: absolute; left: 0; right: 0; top: 2.5px; height: 1px; background: var(--hair); }
+  .pull i {
+    position: absolute; top: 0; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--paper);
+    transition-property: left, background-color; transition-duration: 700ms; transition-timing-function: var(--ease);
+  }
+  .pull.met i { background: var(--clay); }
+
+  .stage { flex: 1; display: flex; align-items: center; }
+  .step { width: 100%; max-width: 340px; margin: 0 auto; }
+  .step[hidden] { display: none; }
+
+  .step > * { opacity: 0; transform: translateY(6px); }
+  .step.in > * {
+    opacity: 1; transform: none;
+    transition-property: opacity, transform; transition-duration: 520ms; transition-timing-function: var(--ease);
+  }
+  .step.in > *:nth-child(2) { transition-delay: 60ms; }
+  .step.in > *:nth-child(3) { transition-delay: 120ms; }
+  .step.in > *:nth-child(4) { transition-delay: 180ms; }
+  .step.in > *:nth-child(5) { transition-delay: 240ms; }
+  .step.in > *:nth-child(6) { transition-delay: 300ms; }
+
+  .kicker { font-size: 11px; color: var(--paper-faint); margin-bottom: 14px; display: flex; gap: 8px; }
+  .kicker b { font-weight: 500; color: var(--paper-dim); }
+  h1 {
+    font-size: 26px; line-height: 1.15; font-weight: 600; letter-spacing: -0.022em;
+    text-wrap: balance; margin-bottom: 10px;
+  }
+  .lede { color: var(--paper-dim); text-wrap: pretty; margin-bottom: 28px; }
+
+  label.field { display: block; margin-bottom: 14px; }
+  .step h1 + label.field { margin-top: 22px; }
+  label.field > span { display: block; font-size: 11px; color: var(--paper-faint); margin-bottom: 6px; }
+  .input, .textarea, select.input {
+    width: 100%; height: 44px; padding: 0 14px;
+    background: rgba(236, 230, 219, 0.04);
+    border: 0; border-radius: 10px;
+    box-shadow: inset 0 0 0 1px var(--hair);
+    color: var(--paper); font: inherit; font-size: 15px;
+    outline: none;
+    transition-property: box-shadow, background-color; transition-duration: 150ms;
+  }
+  .textarea { height: auto; min-height: 76px; padding: 12px 14px; resize: none; line-height: 1.45; }
+  .input::placeholder, .textarea::placeholder { color: rgba(236, 230, 219, 0.28); }
+  .input:hover, .textarea:hover { box-shadow: inset 0 0 0 1px rgba(236, 230, 219, 0.2); }
+  .input:focus, .textarea:focus { box-shadow: inset 0 0 0 1px rgba(236, 230, 219, 0.55); background: rgba(236, 230, 219, 0.06); }
+  .input[aria-invalid="true"] { box-shadow: inset 0 0 0 1px var(--error); }
+
+  .hint { font-size: 11px; color: var(--paper-faint); margin-top: 8px; min-height: 16px; }
+  .hint.err { color: var(--error); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    position: relative;
+    height: 26px; padding: 0 10px; border-radius: 13px;
+    background: none; border: 0; box-shadow: inset 0 0 0 1px var(--hair);
+    color: var(--paper-dim); font: inherit; font-size: 11px; cursor: pointer;
+    transition-property: color, box-shadow; transition-duration: 150ms;
+  }
+  .chip::before { content: ""; position: absolute; inset: -8px -2px; }
+  .chip:hover { color: var(--paper); box-shadow: inset 0 0 0 1px rgba(236, 230, 219, 0.3); }
+
+  .actions { display: flex; align-items: center; gap: 16px; margin-top: 14px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 44px; padding: 0 20px; border: 0; border-radius: 10px;
+    background: var(--paper); color: var(--ground);
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition-property: transform, opacity, background-color; transition-duration: 150ms; transition-timing-function: var(--ease);
+  }
+  .btn:hover { background: #fff; }
+  .btn:active { transform: scale(0.96); }
+  .btn[disabled] { opacity: 0.5; cursor: default; }
+  .btn svg { width: 13px; height: 13px; }
+  .btn.wide { width: 100%; }
+  .link {
+    position: relative; background: none; border: 0; color: var(--paper-faint);
+    font: inherit; font-size: 12px; cursor: pointer; transition: color 150ms;
+  }
+  .link::before { content: ""; position: absolute; inset: -14px -8px; }
+  .link:hover { color: var(--paper); }
+  .kbd { font-size: 11px; color: var(--paper-faint); }
+  .kbd kbd { font: inherit; padding: 1px 5px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--hair); }
+
+  .fine { font-size: 11px; color: var(--paper-faint); margin-top: 18px; display: flex; gap: 6px; align-items: center; }
+  .fine svg { width: 11px; height: 11px; flex: none; }
+
+  /* ───────── Member plate ───────── */
+  .pcard {
+    display: flex; gap: 0;
+    margin: 6px 0 18px;
+    border-radius: 12px;
+    background: var(--ground-2);
+    box-shadow: inset 0 0 0 1px var(--hair);
+    overflow: hidden;
+  }
+  .pcard-art { position: relative; width: 112px; flex: none; border-right: 1px solid var(--hair); }
+  .pcard-art canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .pcard-body { flex: 1; min-width: 0; padding: 12px 14px; display: flex; flex-direction: column; }
+  .pcard-top { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--paper-faint); margin-bottom: 14px; }
+  .pcard-top .logo { width: 16px; }
+  .pcard-name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+  .pcard-quote { font-size: 12px; color: var(--paper-dim); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pcard-meta { font-size: 10px; color: var(--paper-faint); margin-top: auto; padding-top: 10px; }
+
+  .phone-row { display: flex; gap: 8px; }
+  .phone-row select.input { width: 92px; flex: none; padding: 0 10px; font-size: 13px; appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%23ece6db' stroke-opacity='.5' stroke-width='1.5'%3E%3Cpath d='M2 4l3 3 3-3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; }
+  .phone-row .input { flex: 1; min-width: 0; }
+  .sent { font-size: 11px; color: var(--paper-faint); display: flex; gap: 8px; align-items: baseline; text-wrap: pretty; }
+  .sent i { flex: none; transform: translateY(-1px); }
+  .sent i { width: 6px; height: 6px; border-radius: 50%; background: var(--clay); }
+
+  .divider { height: 1px; background: var(--hair); margin: 22px 0 18px; }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ───────── Mobile ───────── */
+  @media (max-width: 820px) {
+    .shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .plate { height: 30vh; min-height: 200px; border-right: 0; border-bottom: 1px solid var(--hair); }
+    .plate-top, .plate-bottom { left: 16px; right: 16px; }
+    .plate-top { top: 16px; } .plate-bottom { bottom: 12px; }
+    .panel { min-height: 0; padding: 16px 16px 32px; }
+    .stage { align-items: flex-start; padding-top: 28px; }
+    h1 { font-size: 23px; }
+    .step { max-width: none; }
+    .input, .textarea, select.input, .phone-row select.input { font-size: 16px; }
+    .actions .kbd { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .step > *, .step.in > * { transition: none !important; opacity: 1; transform: none; }
+    .pull i { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Plate: the field between two bodies. It closes the distance as the person progresses. -->
+  <aside class="plate" aria-hidden="true">
+    <canvas id="field"></canvas>
+    <div class="plate-top">
+      <span class="wordmark"><svg class="logo" viewBox="4 2 198 150" fill="currentColor" aria-hidden="true"><path d="M85.3772 32.024L16.1691 18.3645C10.9033 17.3252 6 21.3553 6 26.7227C6 30.8625 8.97598 34.4031 13.0541 35.1152L72.9119 45.5665C76.784 46.2426 79.6096 49.6043 79.6096 53.535C79.6096 57.649 76.5216 61.1077 72.4339 61.5723L51.7716 63.9202C42.8656 64.9323 39.49 76.1065 46.3462 81.8801C48.8875 84.0202 52.311 84.7903 55.5239 83.9448L86.0883 75.9016C91.2213 74.5508 94.7989 69.9099 94.7989 64.6022V43.4869C94.7989 37.9062 90.8529 33.1043 85.3772 32.024Z"/><path d="M120.579 32.024L189.787 18.3645C195.053 17.3252 199.956 21.3553 199.956 26.7227C199.956 30.8625 196.98 34.4031 192.902 35.1152L133.044 45.5665C129.172 46.2426 126.346 49.6043 126.346 53.535C126.346 57.649 129.434 61.1077 133.522 61.5723L153.915 63.8896C162.691 64.8869 165.865 76.0069 158.939 81.4872C156.537 83.3876 153.391 84.069 150.418 83.3327L120.032 75.8074C114.819 74.5162 111.157 69.837 111.157 64.466V43.4869C111.157 37.9062 115.104 33.1043 120.579 32.024Z"/><path d="M102.979 5.8418H105.315C107.897 5.84184 109.989 7.9345 109.989 10.5156C109.989 13.0968 107.897 15.1894 105.315 15.1895H102.979C100.397 15.1894 98.3047 13.0968 98.3047 10.5156C98.3047 7.93448 100.397 5.84181 102.979 5.8418Z"/><path d="M111.157 143.714V66.5989C111.157 63.3724 113.773 60.7568 116.999 60.7568C120.226 60.7568 122.841 63.3724 122.841 66.5989V143.714C122.841 146.94 120.226 149.556 116.999 149.556C113.773 149.556 111.157 146.94 111.157 143.714Z"/></svg>Force</span>
+      <span>Pl. <span class="tab" id="plateNo">00</span></span>
+    </div>
+    <div class="plate-bottom">
+      <span>Field between you and yourself</span>
+      <span class="tab readout" id="distance">d = 1.00</span>
+    </div>
+  </aside>
+
+  <main class="panel">
+    <div class="panel-head">
+      <button class="back" id="back" type="button" hidden>
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 2.5L4 6l3.5 3.5"/></svg>
+        Back
+      </button>
+      <div class="progress" id="progress" aria-live="polite">
+        <span class="tab" id="stepLabel"></span>
+        <span class="pull" id="pull"><i id="dotA"></i><i id="dotB"></i></span>
+      </div>
+    </div>
+
+    <div class="stage">
+
+      <!-- 0 · Invitation -->
+      <section class="step" data-step="0">
+        <p class="kicker"><b>An invitation</b><span>No. <span class="tab" id="inviteNo">0147</span></span></p>
+        <h1>Somewhere, someone thinks like you.</h1>
+        <p class="lede">Force gets to know how you think, then introduces you to people who think like you. You've been asked in early.</p>
+        <div class="actions" style="margin-top:0">
+          <button class="btn" type="button" data-next>
+            Accept invitation
+            <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5h8M7 3l3.5 3.5L7 10"/></svg>
+          </button>
+          <span class="kbd">under a minute</span>
+        </div>
+        <p class="fine">
+          <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="5" width="7" height="5" rx="1.2"/><path d="M3.5 5V3.5a2 2 0 014 0V5"/></svg>
+          Introduced, never exposed. Both sides say yes.
+        </p>
+      </section>
+
+      <!-- 1 · Name -->
+      <form class="step" data-step="1" hidden novalidate>
+        <p class="kicker"><b>Before we introduce you</b></p>
+        <h1>We'd like to know you. What should we call you?</h1>
+        <label class="field">
+          <span>Name</span>
+          <input class="input" id="name" name="name" autocomplete="given-name" placeholder="First name is plenty" required>
+        </label>
+        <p class="hint" id="nameHint"></p>
+        <div class="actions">
+          <button class="btn wide" type="submit">Continue</button>
+        </div>
+      </form>
+
+      <!-- 2 · Email (lead is saved here) -->
+      <form class="step" data-step="2" hidden novalidate>
+        <p class="kicker"><b id="hello">Nice to meet you</b></p>
+        <h1>Where should your introductions arrive?</h1>
+        <label class="field">
+          <span>Email</span>
+          <input class="input" id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="you@domain.com" required>
+        </label>
+        <p class="hint" id="emailHint">Only for introductions. No newsletters.</p>
+        <div class="actions">
+          <button class="btn wide" type="submit">Continue</button>
+        </div>
+      </form>
+
+      <!-- 3 · One honest line -->
+      <form class="step" data-step="3" hidden novalidate>
+        <p class="kicker"><b>So we know you a little</b></p>
+        <h1>What have you been thinking about lately?</h1>
+        <label class="field">
+          <span class="sr">What you've been thinking about</span>
+          <textarea class="textarea" id="thought" name="thought" maxlength="140" rows="2" placeholder="A book, a question, a 2 a.m. idea. One line is plenty." required></textarea>
+        </label>
+        <div class="chips" id="chips">
+          <button type="button" class="chip">Whether to move cities</button>
+          <button type="button" class="chip">A book I can't stop quoting</button>
+          <button type="button" class="chip">Starting something of my own</button>
+        </div>
+        <p class="hint" id="thoughtHint"></p>
+        <div class="actions">
+          <button class="btn wide" type="submit">Continue</button>
+        </div>
+      </form>
+
+      <!-- 4 · Phone (final input) -->
+      <form class="step" data-step="4" hidden novalidate>
+        <p class="kicker"><b>Last one</b></p>
+        <h1>Where should we text you when it lands?</h1>
+        <label class="field" for="phone"><span>Phone</span></label>
+        <div class="phone-row">
+          <select class="input" id="cc" aria-label="Country code">
+            <option value="+91" data-code="IN">IN +91</option>
+            <option value="+1" data-code="US">US +1</option>
+            <option value="+44" data-code="GB">UK +44</option>
+            <option value="+65" data-code="SG">SG +65</option>
+            <option value="+971" data-code="AE">AE +971</option>
+            <option value="+61" data-code="AU">AU +61</option>
+            <option value="+49" data-code="DE">DE +49</option>
+          </select>
+          <input class="input" id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="98765 43210" required>
+        </div>
+        <p class="hint" id="phoneHint">One text when your introduction is ready. Never shared.</p>
+        <div class="actions">
+          <button class="btn wide" type="submit" id="joinBtn">Join forces</button>
+        </div>
+      </form>
+
+      <!-- 5 · Done -->
+      <section class="step" data-step="5" hidden>
+        <p class="kicker"><b>You're in</b></p>
+        <h1>Your first introduction is on its way.</h1>
+        <figure class="pcard">
+          <div class="pcard-art"><canvas id="cardField" aria-hidden="true"></canvas></div>
+          <figcaption class="pcard-body">
+            <div class="pcard-top"><svg class="logo" viewBox="4 2 198 150" fill="currentColor" aria-hidden="true"><path d="M85.3772 32.024L16.1691 18.3645C10.9033 17.3252 6 21.3553 6 26.7227C6 30.8625 8.97598 34.4031 13.0541 35.1152L72.9119 45.5665C76.784 46.2426 79.6096 49.6043 79.6096 53.535C79.6096 57.649 76.5216 61.1077 72.4339 61.5723L51.7716 63.9202C42.8656 64.9323 39.49 76.1065 46.3462 81.8801C48.8875 84.0202 52.311 84.7903 55.5239 83.9448L86.0883 75.9016C91.2213 74.5508 94.7989 69.9099 94.7989 64.6022V43.4869C94.7989 37.9062 90.8529 33.1043 85.3772 32.024Z"/><path d="M120.579 32.024L189.787 18.3645C195.053 17.3252 199.956 21.3553 199.956 26.7227C199.956 30.8625 196.98 34.4031 192.902 35.1152L133.044 45.5665C129.172 46.2426 126.346 49.6043 126.346 53.535C126.346 57.649 129.434 61.1077 133.522 61.5723L153.915 63.8896C162.691 64.8869 165.865 76.0069 158.939 81.4872C156.537 83.3876 153.391 84.069 150.418 83.3327L120.032 75.8074C114.819 74.5162 111.157 69.837 111.157 64.466V43.4869C111.157 37.9062 115.104 33.1043 120.579 32.024Z"/><path d="M102.979 5.8418H105.315C107.897 5.84184 109.989 7.9345 109.989 10.5156C109.989 13.0968 107.897 15.1894 105.315 15.1895H102.979C100.397 15.1894 98.3047 13.0968 98.3047 10.5156C98.3047 7.93448 100.397 5.84181 102.979 5.8418Z"/><path d="M111.157 143.714V66.5989C111.157 63.3724 113.773 60.7568 116.999 60.7568C120.226 60.7568 122.841 63.3724 122.841 66.5989V143.714C122.841 146.94 120.226 149.556 116.999 149.556C113.773 149.556 111.157 146.94 111.157 143.714Z"/></svg><span class="tab">No. <span id="memberNo">0147</span></span></div>
+            <p class="pcard-name" id="cardName"></p>
+            <p class="pcard-quote" id="cardQuote"></p>
+            <p class="pcard-meta tab">Early member · <span id="joined"></span></p>
+          </figcaption>
+        </figure>
+        <p class="sent"><i></i><span id="sentLine"></span></p>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+  const steps = [...document.querySelectorAll('.step')];
+  const data = { name: '', email: '', thought: '', phone: '', countryCode: 'IN' };
+  let current = 0;
+
+  // ── Plate copy per step: the distance closes as you go.
+  const plate = [
+    { no: '00', d: 'd = 1.00', sep: 0.64 },
+    { no: '01', d: 'd = 0.72', sep: 0.50 },
+    { no: '02', d: 'd = 0.46', sep: 0.34 },
+    { no: '03', d: 'd = 0.24', sep: 0.18 },
+    { no: '04', d: 'd = 0.12', sep: 0.13 },
+    { no: '05', d: 'd = 0.02', sep: 0.022 },
+  ];
+
+  // ── Backend. The live page posts {name,email,phone,countryCode} to /api/fun-masking once, at the end.
+  // Here the lead is saved at email (so drop-offs aren't lost) and enriched afterwards.
+  // Mocked for the prototype; swap `send` for the real fetch.
+  async function send(stage, payload) {
+    console.log('[force] save', stage, payload);
+    // return fetch('/api/fun-masking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    await new Promise((r) => setTimeout(r, 450));
+    return { ok: true };
+  }
+
+  // ── Step navigation
+  function show(n, push = true) {
+    if (push && n !== current) history.pushState({ step: n }, '');
+    const prev = steps[current];
+    prev.classList.remove('in');
+    prev.hidden = true;
+    current = n;
+    const el = steps[n];
+    el.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+
+    $('back').hidden = n === 0;
+    const label = n === 0 ? '' : n === 5 ? 'Known' : `0${n} / 04`;
+    $('stepLabel').textContent = label;
+    $('progress').style.visibility = n === 0 ? 'hidden' : 'visible';
+
+    // Two dots drawing together
+    const close = n / 5;
+    const span = 64 - 6;
+    $('dotA').style.left = `${(close * span) / 2}px`;
+    $('dotB').style.left = `${span - (close * span) / 2}px`;
+    $('pull').classList.toggle('met', n === 5);
+
+    $('plateNo').textContent = plate[n].no;
+    $('distance').textContent = plate[n].d;
+    field.setSeparation(plate[n].sep, n === 5);
+
+    const focusable = el.querySelector('input, textarea');
+    if (focusable && n !== 5) setTimeout(() => focusable.focus({ preventScroll: true }), reduce ? 0 : 180);
+  }
+
+  document.querySelector('[data-next]').addEventListener('click', () => show(1));
+  $('back').addEventListener('click', () => { if (history.state && history.state.step > 0) history.back(); else if (current > 0) show(current - 1, false); });
+  addEventListener('popstate', (e) => show(e.state ? e.state.step : 0, false));
+  history.replaceState({ step: 0 }, '');
+
+  function setError(input, hint, msg, fallback = '') {
+    input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    hint.textContent = msg || fallback;
+    hint.classList.toggle('err', !!msg);
+  }
+
+  // 1 · Name
+  steps[1].addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = $('name').value.trim();
+    if (!v) return setError($('name'), $('nameHint'), 'Just a first name is fine.');
+    setError($('name'), $('nameHint'), '');
+    data.name = v;
+    field.setLabel(v.split(/\s+/)[0]);
+    $('hello').textContent = `Nice to meet you, ${v.split(/\s+/)[0]}`;
+    show(2);
+  });
+  $('name').addEventListener('input', () => setError($('name'), $('nameHint'), ''));
+
+  // 2 · Email: lead captured here
+  const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  const emailHint = 'Only for introductions. No newsletters.';
+  steps[2].addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = $('email').value.trim();
+    if (!emailOk(v)) return setError($('email'), $('emailHint'), v ? 'That email looks off. Mind checking it?' : 'We need somewhere to send your introduction.', emailHint);
+    setError($('email'), $('emailHint'), '', emailHint);
+    data.email = v;
+    send('lead', { name: data.name, email: data.email });
+    show(3);
+  });
+  $('email').addEventListener('input', () => setError($('email'), $('emailHint'), '', emailHint));
+
+  // 3 · Thought
+  $('chips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    $('thought').value = chip.textContent;
+    setError($('thought'), $('thoughtHint'), '');
+    $('thought').focus();
+  });
+  $('thought').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); steps[3].requestSubmit(); }
+  });
+  $('thought').addEventListener('input', () => setError($('thought'), $('thoughtHint'), ''));
+  steps[3].addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = $('thought').value.trim();
+    if (v.length < 3) return setError($('thought'), $('thoughtHint'), 'A few words is enough. Or tap one above.');
+    setError($('thought'), $('thoughtHint'), '');
+    data.thought = v;
+    send('thought', { email: data.email, thought: v });
+    show(4);
+  });
+
+  // 4 · Phone, then join
+  const phoneHint = 'One text when your introduction is ready. Never shared.';
+  $('phone').addEventListener('input', () => setError($('phone'), $('phoneHint'), '', phoneHint));
+  steps[4].addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const raw = $('phone').value.trim();
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length < 6 || digits.length > 15) return setError($('phone'), $('phoneHint'), raw ? 'That number looks off. Check it?' : 'We need a number to text you.', phoneHint);
+    setError($('phone'), $('phoneHint'), '', phoneHint);
+    const opt = $('cc').selectedOptions[0];
+    data.phone = `${opt.value} ${raw}`;
+    data.countryCode = opt.dataset.code;
+    const btn = $('joinBtn');
+    btn.disabled = true; btn.textContent = 'Joining…';
+    // Same shape the live endpoint already takes, plus `thought`.
+    const res = await send('join', { name: data.name, email: data.email, phone: data.phone, countryCode: data.countryCode, thought: data.thought });
+    btn.disabled = false; btn.textContent = 'Join forces';
+    if (!res.ok) return setError($('phone'), $('phoneHint'), 'Something slipped. Try once more?', phoneHint);
+    fillCard();
+    show(5);
+  });
+
+  // 5 · Card
+  function memberNumber(s) {
+    let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    return String(100 + (h % 900)).padStart(4, '0');
+  }
+  function fillCard() {
+    const no = memberNumber(data.email);
+    $('memberNo').textContent = no;
+    $('cardName').textContent = data.name;
+    $('cardQuote').textContent = data.thought ? `“${data.thought.replace(/[.]$/, '')}”` : '';
+    $('sentLine').textContent = `We'll text ${data.phone} and email ${data.email} when your introduction is ready.`;
+    const d = new Date();
+    $('joined').textContent = [d.getDate(), d.getMonth() + 1, d.getFullYear() % 100].map((x) => String(x).padStart(2, '0')).join('.');
+    requestAnimationFrame(() => drawPlate($('cardField'), data.email + data.name));
+  }
+  // Each member gets their own plate: same physics, orientation and grain seeded by who they are.
+  function drawPlate(canvas, seedStr) {
+    const r = canvas.getBoundingClientRect();
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const W = r.width, H = r.height;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    let seed = 1;
+    for (const c of seedStr) seed = (seed * 31 + c.charCodeAt(0)) % 2147483647 || 1;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const theta = (rnd() - 0.5) * 1.4;
+    const cx = W * (0.42 + rnd() * 0.16), cy = H * (0.44 + rnd() * 0.12);
+    const half = W * 0.03;
+    const ax = cx - Math.cos(theta) * half, ay = cy - Math.sin(theta) * half;
+    const bx = cx + Math.cos(theta) * half, by = cy + Math.sin(theta) * half;
+    const soft = 10, g = 7, L = 4.5;
+    const buckets = [new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D()];
+    for (let y = g / 2; y < H; y += g) for (let x = g / 2; x < W; x += g) {
+      const px = x + (rnd() - 0.5) * g * 0.9, py = y + (rnd() - 0.5) * g * 0.9;
+      if ((px - cx) ** 2 + (py - cy) ** 2 < 14 ** 2) continue;
+      let dx = px - ax, dy = py - ay, r2 = dx * dx + dy * dy + soft * soft, r3 = r2 * Math.sqrt(r2);
+      let ex = dx / r3, ey = dy / r3;
+      dx = px - bx; dy = py - by; r2 = dx * dx + dy * dy + soft * soft; r3 = r2 * Math.sqrt(r2);
+      ex -= dx / r3; ey -= dy / r3;
+      const m = Math.hypot(ex, ey); if (!m) continue;
+      const s = Math.min(1, Math.log10(1 + m * W * W * 0.9) / 2.2);
+      const k = (0.7 + rnd() * 0.6) * L * 0.5;
+      const ux = (ex / m) * k, uy = (ey / m) * k;
+      const b = Math.min(4, Math.floor(s * 5));
+      buckets[b].moveTo(px - ux, py - uy); buckets[b].lineTo(px + ux, py + uy);
+    }
+    ctx.lineCap = 'round'; ctx.lineWidth = 1;
+    [0.05, 0.11, 0.19, 0.3, 0.46].forEach((a, i) => { ctx.strokeStyle = `rgba(236,230,219,${a})`; ctx.stroke(buckets[i]); });
+    ctx.fillStyle = '#c98a72';
+    [[ax, ay], [bx, by]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill(); });
+  }
+
+
+  // ───────── Field plate: iron filings between two bodies ─────────
+  const field = (() => {
+    const canvas = $('field');
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0, dpr = 1, pts = [];
+    let sep = plate[0].sep, target = sep, vel = 0, met = false, metT = 0;
+    let label = 'you';
+    let running = false, t0 = performance.now();
+
+    function resize() {
+      const r = canvas.getBoundingClientRect();
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      W = r.width; H = r.height;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // jittered grid of filings
+      pts = [];
+      const g = W < 500 ? 9 : 11;
+      let seed = 7;
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      for (let y = g / 2; y < H; y += g)
+        for (let x = g / 2; x < W; x += g)
+          pts.push([x + (rnd() - 0.5) * g * 0.9, y + (rnd() - 0.5) * g * 0.9, 0.7 + rnd() * 0.6]);
+      draw(performance.now());
+    }
+
+    function draw(now) {
+      const t = (now - t0) / 1000;
+      ctx.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H * 0.5;
+      const breathe = reduce ? 0 : Math.sin(t * 0.6) * 0.006;
+      const half = Math.max(0.012, sep + breathe) * W / 2;
+      const ax = cx - half, bx = cx + half;
+      const soft = Math.max(18, W * 0.02);
+      const L = W < 500 ? 5 : 6.5;
+
+      const buckets = [new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D()];
+      const merged = sep < 0.1;
+      const clear = (x, y) => {
+        const near = (px) => (x - px) ** 2 + (y - cy) ** 2 < 12 ** 2;
+        const tag = (px, w) => Math.abs(x - px) < w && y > cy + 10 && y < cy + 28;
+        return near(ax) || near(bx) || (merged ? tag(cx, 52) : tag(ax, 30) || tag(bx, 48));
+      };
+      for (const [x, y, k] of pts) {
+        if (clear(x, y)) continue;
+        // dipole: +1 at a, −1 at b. Lines run between the two bodies.
+        let dx = x - ax, dy = y - cy, r2 = dx * dx + dy * dy + soft * soft, r3 = r2 * Math.sqrt(r2);
+        let ex = dx / r3, ey = dy / r3;
+        dx = x - bx; dy = y - cy; r2 = dx * dx + dy * dy + soft * soft; r3 = r2 * Math.sqrt(r2);
+        ex -= dx / r3; ey -= dy / r3;
+        const m = Math.hypot(ex, ey);
+        if (!m) continue;
+        const s = Math.min(1, Math.log10(1 + m * W * W * 0.9) / 2.2);
+        const b = Math.min(4, Math.floor(s * 5));
+        const ux = (ex / m) * L * k * 0.5, uy = (ey / m) * L * k * 0.5;
+        buckets[b].moveTo(x - ux, y - uy);
+        buckets[b].lineTo(x + ux, y + uy);
+      }
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 1;
+      const alphas = [0.04, 0.1, 0.18, 0.3, 0.48];
+      buckets.forEach((p, i) => { ctx.strokeStyle = `rgba(236,230,219,${alphas[i]})`; ctx.stroke(p); });
+
+      // bodies
+      const r = W < 500 ? 4 : 5;
+      ctx.fillStyle = '#ece6db';
+      ctx.beginPath(); ctx.arc(ax, cy, r, 0, Math.PI * 2); ctx.fill();
+      const mt = met ? Math.min(1, (now - metT) / 700) : 0;
+      ctx.fillStyle = mt ? `rgb(${236 + (201 - 236) * mt},${230 + (138 - 230) * mt},${219 + (114 - 219) * mt})` : '#ece6db';
+      ctx.beginPath(); ctx.arc(bx, cy, r, 0, Math.PI * 2); ctx.fill();
+      if (met) { ctx.fillStyle = `rgba(201,138,114,${mt})`; ctx.beginPath(); ctx.arc(ax, cy, r, 0, Math.PI * 2); ctx.fill(); }
+
+      // labels
+      ctx.font = `11px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif`;
+      ctx.textAlign = 'center';
+      const la = 1 - Math.min(1, Math.max(0, (0.1 - sep) / 0.06));
+      ctx.fillStyle = `rgba(236,230,219,${0.55 * la})`;
+      ctx.fillText(label, ax, cy + 22);
+      ctx.fillText('your inner self', bx, cy + 22);
+      if (la < 1) { ctx.fillStyle = `rgba(236,230,219,${0.55 * (1 - la)})`; ctx.fillText(`${label}, known`, cx, cy + 22); }
+    }
+
+    function tick(now) {
+      // critically damped spring toward target separation
+      const dt = 1 / 60, k = 26, c = 2 * Math.sqrt(k);
+      vel += (-(sep - target) * k - vel * c) * dt;
+      sep += vel * dt;
+      draw(now);
+      if (!reduce) requestAnimationFrame(tick); else running = false;
+    }
+    function start() { if (!running) { running = true; requestAnimationFrame(tick); } }
+
+    new ResizeObserver(resize).observe(canvas);
+    start();
+
+    return {
+      setSeparation(s, isMet) {
+        target = s;
+        if (isMet && !met) metT = performance.now();
+        met = isMet;
+        if (reduce) { sep = s; draw(performance.now()); }
+      },
+      setLabel(s) { label = s.toLowerCase(); if (reduce) draw(performance.now()); },
+    };
+  })();
+
+  // invite number (from the invite link in production)
+  $('inviteNo').textContent = new URLSearchParams(location.search).get('n') || '0147';
+
+  show(0, false);
+})();
+</script>
+</body>
+</html>
